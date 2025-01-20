@@ -1,6 +1,10 @@
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/c8a8ff17-791e-49e1-a7c6-9a0a37f16fd0" height="300" width="300">
+</div>
+
 # grabit
 
-`grabit` is a command-line tool for recursively scanning a directory, extracting file contents, and saving or copying them to the clipboard while respecting `.grabit` ignore rules. The tool helps turn complex projexts into LLM input for big context questions.
+`grabit` is a command-line tool for recursively scanning a directory, extracting file contents, and saving or copying them to the clipboard while respecting `.grabit` ignore rules. The tool helps turn complex projects into LLM input for big context questions.
 
 ## Features
 
@@ -68,3 +72,5 @@ print("Hello, World!")
 ## License
 
 MIT License
+
+[Connor Skelland](https://github.com/Connor56)
