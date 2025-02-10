@@ -7,6 +7,7 @@ import re
 from typing import List, Set, Tuple
 from models import File
 from datetime import datetime
+from present import generate_file_table
 
 
 def copy_to_clipboard(text: str):
@@ -137,11 +138,11 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
     ignore_patterns = read_gitignore(path)
     files = recursive_files(path, ignore_patterns)
 
-    context = "Below is a list of all the files in this project and their contents.\n\n"
+    context = "Below is a list of related files, their contents and git history.\n\n"
 
     for file in files:
         unix_style_path = file.path.replace("\\", "/")
-        context += f"## `{unix_style_path}`:\n```\n{file.contents}\n```\n\n"
+        context += f"## `{unix_style_path}`:\n### Git History:\n{file.git_history}\n### Contents:\n```\n{file.contents}\n```\n\n"
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
@@ -152,9 +153,15 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
         print("Context copied to clipboard.")
         copy_to_clipboard(context)
 
-    print(
-        f"Prompt Size: {len(context)} Chars, {round(len(context)/4, 1)} Tokens (Rough estimate)."
-    )
+    if not output and not to_clipboard:
+        print(context)
+        print("\nUse the `-c` flag to copy this context to clipboard.")
+        print("Use the `-o <your-file-name>` flag to save it to a file.")
+
+    print(f"\nPrompt Size: {len(context)} Chars")
+    print(f"Prompt Size:  {round(len(context)/4)} Tokens (Rough estimate).")
+    print(f"Total files: {len(files)}")
+    print(generate_file_table(files))
 
     return context
 
