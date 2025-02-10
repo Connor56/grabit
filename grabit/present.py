@@ -1,5 +1,5 @@
 from typing import List, Any
-from models import File
+from grabit.models import File
 
 
 def generate_file_table(files: List[File]) -> str:

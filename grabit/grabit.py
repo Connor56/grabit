@@ -5,9 +5,9 @@ import subprocess
 from pathlib import Path
 import re
 from typing import List, Set, Tuple
-from models import File
+from grabit.models import File
 from datetime import datetime
-from present import generate_file_table
+from grabit.present import generate_file_table
 
 
 def copy_to_clipboard(text: str):
@@ -60,6 +60,9 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
         history = result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Error running git log: {e}")
+        return None
+
+    if history == "":
         return None
 
     # If history is not None, get the data
@@ -159,7 +162,7 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
         print("Use the `-o <your-file-name>` flag to save it to a file.")
 
     print(f"\nPrompt Size: {len(context)} Chars")
-    print(f"Prompt Size:  {round(len(context)/4)} Tokens (Rough estimate).")
+    print(f"Prompt Size: {round(len(context)/4)} Tokens (Rough estimate).")
     print(f"Total files: {len(files)}")
     print(generate_file_table(files))
 
