@@ -81,7 +81,9 @@ def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> boo
 
 
 def recursive_files(
-    path: str, ignore_patterns: Set[str], data: List[File] = []
+    path: str,
+    ignore_patterns: Set[str],
+    data: List[File] = [],
 ) -> List[File]:
     """Recursively gets all file paths and contents in a directory, respecting .gitignore."""
     directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
@@ -97,9 +99,30 @@ def recursive_files(
         try:
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 contents = f.read()
-            data.append(File(file_path, contents))
 
-            print(f"Found: {file_path}, Size: {len(contents)}")
+            # Used to improve presentation on the command line
+            git_data = get_git_data(file_path)
+
+            if git_data is None:
+                git_history = None
+                last_author = None
+                last_modified = None
+            else:
+                git_history, last_modified, last_author = git_data
+
+            data.append(
+                File(
+                    path=file_path,
+                    contents=contents,
+                    chars=len(contents),
+                    tokens=len(contents) // 4,
+                    git_history=git_history,
+                    last_author=last_author,
+                    last_modified=last_modified,
+                )
+            )
+
+            print(f"Found: {file_path}")
         except Exception as e:
             print(f"Skipping {file_path}: {e}")
 
