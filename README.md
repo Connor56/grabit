@@ -85,6 +85,7 @@ print("Hello, World!")
 - [x] ~~if the files have git history, find the git history of every collected file and add when it was last changed.~~
 - [x] ~~taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.~~
 - [ ] add an option to include the git diff of each file, or the last N diffs or what have you. This could add even more context for an LLM, an optional argument could be add that switches this on.
+- [ ] add the ablity to collect the whole git history of the repo, all the logs, and get the timeline of each log so you can see how frequently a file is changed compared to how many commits have been made in total. This extra information could be used to help decide which files to include or exclude. It could also help the user decide how important a particular file is. Especially if data on recent history is provided.
 - [ ] add tests to the package to avoid changes causing failure.
 - [ ] decide on versioning strategy and add to `README.md`
 
