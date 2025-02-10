@@ -69,6 +69,14 @@ print("Hello, World!")
 ``
 ```
 
+## Versioning
+
+Major.Minor.Patch
+
+- Major: Breaking changes.
+- Minor: New feature has been added, but backwards compatible.
+- Patch: Backwards compatible bug fixes.
+
 ## Future Features
 
 - [ ] include and exclude sections in `.grabit`.
@@ -87,7 +95,7 @@ print("Hello, World!")
 - [ ] add an option to include the git diff of each file, or the last N diffs or what have you. This could add even more context for an LLM, an optional argument could be add that switches this on.
 - [ ] add the ablity to collect the whole git history of the repo, all the logs, and get the timeline of each log so you can see how frequently a file is changed compared to how many commits have been made in total. This extra information could be used to help decide which files to include or exclude. It could also help the user decide how important a particular file is. Especially if data on recent history is provided.
 - [ ] add tests to the package to avoid changes causing failure.
-- [ ] decide on versioning strategy and add to `README.md`
+- [x] decide on versioning strategy and add to `README.md`
 
 ## License
 
