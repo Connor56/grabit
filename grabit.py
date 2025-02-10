@@ -4,8 +4,9 @@ import argparse
 import subprocess
 from pathlib import Path
 import re
-from typing import List, Set
+from typing import List, Set, Tuple
 from models import File
+from datetime import datetime
 
 
 def copy_to_clipboard(text: str):
@@ -38,6 +39,35 @@ def read_gitignore(directory: str) -> Set[str]:
     print("--- ignore patterns ---")
     print(ignore_patterns)
     return ignore_patterns
+
+
+def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
+    """
+    Gets the git history of the provided file path, and extracts associated data.
+    """
+    git_log_cmd = [
+        "git",
+        "log",
+        "--follow",
+        "--pretty=format:%h | %an | %ad | %s",  # Gets the author name, and author date
+        "--date=short",
+        file_path,
+    ]
+
+    try:
+        result = subprocess.run(git_log_cmd, capture_output=True, text=True, check=True)
+        history = result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error running git log: {e}")
+        return None
+
+    # If history is not None, get the data
+    last_modified_string = history.split("\n")[0].split("|")[2].strip()
+    last_modified = datetime.strptime(last_modified_string, "%Y-%m-%d")
+
+    last_author = history.split("\n")[0].split("|")[1].strip()
+
+    return (history, last_modified, last_author)
 
 
 def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> bool:
