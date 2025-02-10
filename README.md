@@ -72,6 +72,7 @@ print("Hello, World!")
 ## Features
 
 - [ ] include and exclude sections in `.grabit`.
+- [ ] different titled configurations in the `.grabit` file. i.e. you could have a configuration for getting section A of your app, and another for section B of your app to make it easier to set the configs once and not worry afterwards.
 - [ ] include a directory tree in the output as well as the code.
 - [ ] tell the user the rough number of tokens that have been found across all the files.
 - [ ] if the number of tokens is high, intelligently group files by suffix and prefix and ask the user if they'd like to include or exclude them.
@@ -79,6 +80,8 @@ print("Hello, World!")
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
 - [ ] add an option for setting up a query on the cli that helps grabit decide how simliar files are to that query and suggest including or discluding based on that.
 - [ ] Store the query inside of the `.grabit` file for faster query re-runs.
+- [ ] If the files have git history, find the git history of every collected file and add when it was last changed.
+- [ ] Taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.
 
 ## License
 
