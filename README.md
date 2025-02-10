@@ -69,7 +69,7 @@ print("Hello, World!")
 ``
 ```
 
-## Features
+## Future Features
 
 - [ ] include and exclude sections in `.grabit`.
 - [ ] different titled configurations in the `.grabit` file. i.e. you could have a configuration for getting section A of your app, and another for section B of your app to make it easier to set the configs once and not worry afterwards.
