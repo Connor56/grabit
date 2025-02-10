@@ -77,7 +77,7 @@ print("Hello, World!")
 - [ ] tell the user the rough number of tokens that have been found across all the files.
 - [ ] if the number of tokens is high, intelligently group files by suffix and prefix and ask the user if they'd like to include or exclude them.
 - [ ] ask the user if they'd like to include only a snippet of parts of long files, i.e. first 50 lines or so. Allow them to set this on a per file basis.
-- [ ] predict the number of tokens in a file based on the number of characters in each file.
+- [x] predict the number of tokens in a file based on the number of characters in each file.
 - [ ] automatically generate or update the `.grabit` file to reflect the user's choices.
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
 - [ ] add an option for setting up a query on the cli that helps grabit decide how simliar files are to that query and suggest including or discluding based on that.
