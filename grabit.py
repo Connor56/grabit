@@ -1,11 +1,11 @@
 import os
 import platform
 import argparse
-import dataclasses
 import subprocess
 from pathlib import Path
 import re
 from typing import List, Set
+from models import File
 
 
 def copy_to_clipboard(text: str):
@@ -17,12 +17,6 @@ def copy_to_clipboard(text: str):
     elif system == "Darwin":  # macOS
         process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
         process.communicate(input=text.encode("utf-8"))
-
-
-@dataclasses.dataclass
-class File:
-    path: str
-    contents: str
 
 
 def read_gitignore(directory: str) -> Set[str]:
