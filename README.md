@@ -81,9 +81,11 @@ print("Hello, World!")
 - [ ] automatically generate or update the `.grabit` file to reflect the user's choices.
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
 - [ ] add an option for setting up a query on the cli that helps grabit decide how simliar files are to that query and suggest including or discluding based on that.
-- [ ] Store the query inside of the `.grabit` file for faster query re-runs.
-- [ ] If the files have git history, find the git history of every collected file and add when it was last changed.
-- [ ] Taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.
+- [ ] store the query inside of the `.grabit` file for faster query re-runs.
+- [ ] if the files have git history, find the git history of every collected file and add when it was last changed.
+- [ ] taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.
+- [ ] add tests to the package to avoid changes causing failure.
+- [ ] decide on versioning strategy and add to `README.md`
 
 ## License
 
