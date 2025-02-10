@@ -82,8 +82,9 @@ print("Hello, World!")
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
 - [ ] add an option for setting up a query on the cli that helps grabit decide how simliar files are to that query and suggest including or discluding based on that. Cursor do something like this, a vector database.
 - [ ] store the query inside of the `.grabit` file for faster query re-runs.
-- [ ] if the files have git history, find the git history of every collected file and add when it was last changed.
-- [ ] taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.
+- [x] ~~if the files have git history, find the git history of every collected file and add when it was last changed.~~
+- [x] ~~taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.~~
+- [ ] add an option to include the git diff of each file, or the last N diffs or what have you. This could add even more context for an LLM, an optional argument could be add that switches this on.
 - [ ] add tests to the package to avoid changes causing failure.
 - [ ] decide on versioning strategy and add to `README.md`
 
