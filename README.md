@@ -81,6 +81,7 @@ Major.Minor.Patch
 
 - [ ] include and exclude sections in `.grabit`.
 - [ ] different titled configurations in the `.grabit` file. i.e. you could have a configuration for getting section A of your app, and another for section B of your app to make it easier to set the configs once and not worry afterwards.
+- [ ] add a command line argument option for adding an include or an exclude regex, something like grabit -e "some-regex" or grabit -i "some-regex".
 - [ ] include a directory tree in the output as well as the code.
 - [x] ~~tell the user the rough number of tokens that have been found across all the files.~~
 - [x] ~~predict the number of tokens in a file based on the number of characters in each file.~~
