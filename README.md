@@ -101,6 +101,8 @@ Major.Minor.Patch
 - [ ] add a terminal based configuration building process that guides users through the various `.grabit` options and lets them
 - [ ] add an option to set the target number of tokens that grabit should not go over. Then when grabit does go over it will make suggestions underneath the table on what you could do to lower the amount of tokens. If there are embeddings as well, this could be very helpful for figuring out how important different directory paths etc. are.
 - [ ] build directory path trees whilst collecting so that more than just the path name can be used to group the directories and find similarities that could be exploited for removing tokens.
+- [ ] colour the output that's given to the user depending on size so it's easier to see patterns and make decisions on what to include or disclude.
+- [ ] potentiall colour the file endings of different file types to also add a visual cue to the user.
 
 ## License
 
