@@ -21,25 +21,44 @@ def copy_to_clipboard(text: str):
         process.communicate(input=text.encode("utf-8"))
 
 
-def read_gitignore(directory: str) -> Set[str]:
+def read_gitignore(directory: str) -> Tuple[Set[str], str]:
     """
-    Reads a .grabit file (if present) and returns a set of patterns as
-    re.compile objects to ignore.
+    Reads a .grabit file (if present) and returns:
+    - A set of patterns as re.compile objects to ignore
+    - A custom message to prepend to the context (if specified)
     """
     gitignore_path = Path(directory) / ".grabit"
     ignore_patterns = set()
+    custom_message = (
+        "Below is a list of related files, their contents and git history.\n\n"
+    )
 
     if gitignore_path.exists():
         print("--- Found .grabit ---")
+        current_section = None
+        message_lines = []
+
         with open(gitignore_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
-                if line and not line.startswith("#"):  # Ignore comments and empty lines
+                if line.startswith("## "):
+                    current_section = line[3:].lower()
+                    continue
+
+                if not line or line.startswith("//"):  # Skip comments and empty lines
+                    continue
+
+                if current_section == "exclude":
                     ignore_patterns.add(re.compile(line))
+                elif current_section == "message":
+                    message_lines.append(line)
+
+        if message_lines:
+            custom_message = "\n".join(message_lines) + "\n\n"
 
     print("--- ignore patterns ---")
     print(ignore_patterns)
-    return ignore_patterns
+    return ignore_patterns, custom_message
 
 
 def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
@@ -138,10 +157,15 @@ def recursive_files(
 
 def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
     """Prepares a context string for AI to read, optionally saves or copies it."""
-    ignore_patterns = read_gitignore(path)
+    ignore_patterns, custom_message = read_gitignore(path)
     files = recursive_files(path, ignore_patterns)
 
+    # The context string builds the message for the LLM
+    # It starts with a default message.
     context = "Below is a list of related files, their contents and git history.\n\n"
+
+    if custom_message is not None:
+        context = custom_message
 
     for file in files:
         unix_style_path = file.path.replace("\\", "/")
