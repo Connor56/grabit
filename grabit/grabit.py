@@ -45,7 +45,9 @@ def read_gitignore(directory: str) -> Tuple[Set[str], str]:
                     current_section = line[3:].lower()
                     continue
 
-                if not line or line.startswith("//"):  # Skip comments and empty lines
+                if not line or line.startswith(
+                    "//"
+                ):  # Skip comments and empty lines
                     continue
 
                 if current_section == "exclude":
@@ -75,7 +77,9 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     ]
 
     try:
-        result = subprocess.run(git_log_cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            git_log_cmd, capture_output=True, text=True, check=True
+        )
         history = result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Error running git log: {e}")
@@ -93,7 +97,9 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     return (history, last_modified, last_author)
 
 
-def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> bool:
+def is_ignored(
+    file_path: str, ignore_patterns: Set[str], base_path: str
+) -> bool:
     """Checks if a file matches a regex pattern from the .grabit config."""
     for pattern in ignore_patterns:
         found = pattern.match(file_path)
@@ -109,8 +115,12 @@ def recursive_files(
     data: List[File] = [],
 ) -> List[File]:
     """Recursively gets all file paths and contents in a directory, respecting .gitignore."""
-    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    directories = [
+        d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))
+    ]
+    files = [
+        f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))
+    ]
 
     for file in files:
         file_path = os.path.join(path, file)
@@ -162,7 +172,9 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
 
     # The context string builds the message for the LLM
     # It starts with a default message.
-    context = "Below is a list of related files, their contents and git history.\n\n"
+    context = (
+        "Below is a list of related files, their contents and git history.\n\n"
+    )
 
     if custom_message is not None:
         context = custom_message
@@ -193,22 +205,47 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
     return context
 
 
+from grabit.initialisation import init_command
+
+
 def main():
     """Command-line interface for the script."""
     parser = argparse.ArgumentParser(
         description="Recursively scan a directory, extract file contents, and save/copy them, respecting .gitignore."
     )
-    parser.add_argument("directory", type=str, help="The directory to scan")
-    parser.add_argument(
+
+    subparser = parser.add_subparsers(dest="command", help="Available commands")
+
+    # Parser for initialising a .grabit file
+    init_parser = subparser.add_parser(
+        "init", help="Initialize a standard .grabit file in current directory"
+    )
+
+    # Parser for scanning files
+    scan_parser = subparser.add_parser(
+        "scan", help="Scan a directory and save/copy the context"
+    )
+    scan_parser.add_argument(
+        "directory", type=str, help="The directory to scan"
+    )
+    scan_parser.add_argument(
         "-o", "--output", type=str, help="File to save extracted content"
     )
-    parser.add_argument(
-        "-c", "--clipboard", action="store_true", help="Copy output to clipboard"
+    scan_parser.add_argument(
+        "-c",
+        "--clipboard",
+        action="store_true",
+        help="Copy output to clipboard",
     )
 
     args = parser.parse_args()
 
-    prepare_context(args.directory, output=args.output, to_clipboard=args.clipboard)
+    if args.command == "init":
+        init_command()
+    elif args.command == "scan":
+        prepare_context(
+            args.directory, output=args.output, to_clipboard=args.clipboard
+        )
 
 
 if __name__ == "__main__":
