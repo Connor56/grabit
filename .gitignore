@@ -3,3 +3,5 @@
 *.grabit
 *.tool-versions
 poetry.lock
+
+!grabit/default.grabit
