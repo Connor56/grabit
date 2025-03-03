@@ -79,7 +79,7 @@ Major.Minor.Patch
 
 ## Future Features
 
-- [ ] include and exclude sections in `.grabit`.
+- [ ] include ~~and exclude~~ sections in `.grabit`.
 - [ ] different titled configurations in the `.grabit` file. i.e. you could have a configuration for getting section A of your app, and another for section B of your app to make it easier to set the configs once and not worry afterwards.
 - [ ] add a command line argument option for adding an include or an exclude regex, something like grabit -e "some-regex" or grabit -i "some-regex".
 - [ ] include a directory tree in the output as well as the code.
@@ -98,11 +98,14 @@ Major.Minor.Patch
 - [ ] add tests to the package to avoid changes causing failure.
 - [x] ~~decide on versioning strategy and add to `README.md`~~
 - [ ] add standard configuration setting for `.grabit` files. This will run through their directory and make decisions for them, outputting choices to the terminal for the user to review. e.g. skipping extra large files, or skipping known auto-genned file types like `.dll`.
-- [ ] add a terminal based configuration building process that guides users through the various `.grabit` options and lets them
+- [ ] add a terminal based configuration building process that guides users through the various `.grabit` options and lets them build their `.grabit` file via the terminal
 - [ ] add an option to set the target number of tokens that grabit should not go over. Then when grabit does go over it will make suggestions underneath the table on what you could do to lower the amount of tokens. If there are embeddings as well, this could be very helpful for figuring out how important different directory paths etc. are.
 - [ ] build directory path trees whilst collecting so that more than just the path name can be used to group the directories and find similarities that could be exploited for removing tokens.
 - [ ] colour the output that's given to the user depending on size so it's easier to see patterns and make decisions on what to include or disclude.
-- [ ] potentiall colour the file endings of different file types to also add a visual cue to the user.
+- [ ] potentially colour the file endings of different file types to also add a visual cue to the user.
+- [ ] add an option to order table output by token sizes, last modified by, by order scanned, by file path, and by date last modified.
+- [x] ~~add an option for quickly scanning through a directory and getting sizes in bytes very quickly to make choice on inclusion faster.~~
+- [ ] improve the option for fast search to include colour coding and ordering by column.
 
 ## License
 
