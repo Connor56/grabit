@@ -87,6 +87,7 @@ Major.Minor.Patch
 - [x] ~~predict the number of tokens in a file based on the number of characters in each file.~~
 - [ ] if the number of tokens is high, intelligently group files by suffix and prefix and ask the user if they'd like to include or exclude them.
 - [ ] ask the user if they'd like to include only a snippet of parts of long files, i.e. first 50 lines or so. Allow them to set this on a per file basis.
+- [x] ~~add sensible defaults to the `.grabit` file produced by `grabit init`.~~
 - [ ] automatically generate or update the `.grabit` file to reflect the user's choices in the above two features.
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
 - [ ] add an option for setting up a query on the cli that helps grabit decide how simliar files are to that query and suggest including or discluding based on that. Cursor do something like this, a vector database.
@@ -94,7 +95,8 @@ Major.Minor.Patch
 - [x] ~~if the files have git history, find the git history of every collected file and add when it was last changed.~~
 - [x] ~~taking the above further, optionally add the entire git log of commits for each file, or the last N commits or what have you. This could add extra context for an LLM.~~
 - [ ] add an option to include the git diff of each file, or the last N diffs or what have you. This could add even more context for an LLM, an optional argument could be add that switches this on.
-- [ ] add the ablity to collect the whole git history of the repo, all the logs, and get the timeline of each log so you can see how frequently a file is changed compared to how many commits have been made in total. This extra information could be used to help decide which files to include or exclude. It could also help the user decide how important a particular file is. Especially if data on recent history is provided.
+- [x] ~~add the ablity to collect the whole git history of the repo, all the logs.~~
+- [ ] get a log timeline, so you can see how much activity each file has in git. This extra information could be used to help decide which files to include or exclude. It could also help the user decide how important a particular file is. Especially if data on recent history is provided.
 - [ ] add tests to the package to avoid changes causing failure.
 - [x] ~~decide on versioning strategy and add to `README.md`~~
 - [ ] add standard configuration setting for `.grabit` files. This will run through their directory and make decisions for them, outputting choices to the terminal for the user to review. e.g. skipping extra large files, or skipping known auto-genned file types like `.dll`.
@@ -103,7 +105,7 @@ Major.Minor.Patch
 - [ ] build directory path trees whilst collecting so that more than just the path name can be used to group the directories and find similarities that could be exploited for removing tokens.
 - [ ] colour the output that's given to the user depending on size so it's easier to see patterns and make decisions on what to include or disclude.
 - [ ] potentially colour the file endings of different file types to also add a visual cue to the user.
-- [ ] add an option to order table output by token sizes, last modified by, by order scanned, by file path, and by date last modified.
+- [x] ~~add an option to order table output by token sizes, last modified by, by order scanned, by file path, and by date last modified.~~
 - [x] ~~add an option for quickly scanning through a directory and getting sizes in bytes very quickly to make choice on inclusion faster.~~
 - [ ] improve the option for fast search to include colour coding and ordering by column.
 
