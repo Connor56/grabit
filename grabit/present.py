@@ -1,5 +1,46 @@
-from typing import List, Any
-from grabit.models import File
+from typing import List, Any, Dict, Callable
+from grabit.models import File, FileSize
+
+
+def format_table(
+    headers: List[str],
+    rows: List[List[str]],
+    column_widths: List[int],
+    align_right_columns: List[int] = None,
+) -> str:
+    """Generic table formatter that handles borders, padding and alignment."""
+    if not rows:
+        return "No data found"
+
+    if align_right_columns is None:
+        align_right_columns = []
+
+    # Calculate total width including borders and padding
+    total_width = sum(column_widths) + (3 * len(column_widths)) - 1
+
+    # Create border lines
+    top_bottom_border = "+" + "-" * (total_width) + "+"
+    separator = "|" + "-" * (total_width) + "|"
+
+    # Format header row
+    header = "| "
+    for i, (header_text, width) in enumerate(zip(headers, column_widths)):
+        alignment = ">" if i in align_right_columns else "<"
+        header += f"{header_text:{alignment}{width}} | "
+
+    # Format data rows
+    formatted_rows = []
+    for row in rows:
+        formatted_row = "| "
+        for i, (cell, width) in enumerate(zip(row, column_widths)):
+            alignment = ">" if i in align_right_columns else "<"
+            formatted_row += f"{cell:{alignment}{width}} | "
+        formatted_rows.append(formatted_row)
+
+    # Combine all parts
+    return "\n".join(
+        [top_bottom_border, header, separator] + formatted_rows + [top_bottom_border]
+    )
 
 
 def generate_file_table(files: List[File]) -> str:
@@ -8,63 +49,53 @@ def generate_file_table(files: List[File]) -> str:
         return "No files found"
 
     # Get the last commit info for each file
-    last_commits = []
+    rows = []
     for file in files:
         if file.git_history:
             # Git history format is: hash | author | date | message
             last_commit = file.git_history.split("\n")[0].split(" | ")
-            last_commits.append({"author": last_commit[1], "date": last_commit[2]})
+            author, date = last_commit[1], last_commit[2]
         else:
-            last_commits.append({"author": "Unknown", "date": "Unknown"})
+            author, date = "Unknown", "Unknown"
+
+        rows.append(
+            [file.path, str(len(file.contents)), str(file.tokens), author, date]
+        )
 
     # Calculate column widths
-    path_width = max(len("File Path"), max(len(file.path) for file in files))
-    size_width = max(
-        len("Size (chars)"), max(len(str(len(file.contents))) for file in files)
-    )
-    tokens_width = max(len("Tokens"), max(len(str(file.tokens)) for file in files))
-    author_width = max(
-        len("Last Modified By"), max(len(commit["author"]) for commit in last_commits)
-    )
-    date_width = max(len("Date"), max(len(commit["date"]) for commit in last_commits))
+    headers = ["File Path", "Size (chars)", "Tokens", "Last Modified By", "Date"]
+    widths = [
+        max(len(header), max(len(row[i]) for row in rows))
+        for i, header in enumerate(headers)
+    ]
 
-    # Calculate total width including borders and padding
-    total_width = (
-        path_width
-        + size_width
-        + tokens_width
-        + author_width
-        + date_width
-        + 12  # For the " | " separators
+    return format_table(
+        headers=headers,
+        rows=rows,
+        column_widths=widths,
+        align_right_columns=[1, 2],  # Size and tokens columns right-aligned
     )
 
-    # Create border lines
-    top_bottom_border = "+" + "-" * (total_width + 2) + "+"
 
-    # Create header
-    header = (
-        f"| {'File Path':<{path_width}} | "
-        f"{'Size (chars)':>{size_width}} | "
-        f"{'Tokens':>{tokens_width}} | "
-        f"{'Last Modified By':<{author_width}} | "
-        f"{'Date':<{date_width}} |"
+def generate_file_size_table(files: List[FileSize]) -> str:
+    """Generates a formatted table showing file sizes and last modified dates."""
+    if not files:
+        return "No files found"
+
+    rows = [
+        [file.path, f"{file.size:.2f}", file.last_modified.strftime("%Y-%m-%d")]
+        for file in files
+    ]
+
+    headers = ["File Path", "Size (MB)", "Last Modified"]
+    widths = [
+        max(len(header), max(len(row[i]) for row in rows))
+        for i, header in enumerate(headers)
+    ]
+
+    return format_table(
+        headers=headers,
+        rows=rows,
+        column_widths=widths,
+        align_right_columns=[1],  # Size column right-aligned
     )
-    separator = "|" + "-" * (total_width + 2) + "|"
-
-    # Create table rows
-    rows = []
-    for file, commit in zip(files, last_commits):
-        row = (
-            f"| {file.path:<{path_width}} | "
-            f"{len(file.contents):>{size_width}} | "
-            f"{file.tokens:>{tokens_width}} | "
-            f"{commit['author']:<{author_width}} | "
-            f"{commit['date']:<{date_width}} |"
-        )
-        rows.append(row)
-
-    # Combine all parts with borders
-    table = "\n".join(
-        [top_bottom_border, header, separator] + rows + [top_bottom_border]
-    )
-    return table
