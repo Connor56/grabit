@@ -16,9 +16,16 @@
 .*\.git
 
 // Exclude commonly autogenned files
-.*\.log
 .*package-lock\.json
 .*\.DS_Store
+
+// Python
+.*\.whl
+.*\.tar\.gz
+.*\.pyc
+
+// Java
+.
 
 ## include
 

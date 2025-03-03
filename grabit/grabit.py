@@ -220,7 +220,7 @@ def prepare_file_sizes(path: str, output: str = None, to_clipboard: bool = False
     return file_sizes_table
 
 
-def size_files(
+def byte_scan(
     path: str,
     ignore_patterns: Set[str],
     data: List[FileSize] = [],
