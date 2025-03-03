@@ -16,5 +16,5 @@ class File:
 @dataclasses.dataclass
 class FileSize:
     path: str
-    size: float
+    bytes: float
     last_modified: datetime

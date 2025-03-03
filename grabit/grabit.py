@@ -7,7 +7,7 @@ import re
 from typing import List, Set, Tuple
 from grabit.models import File, FileSize
 from datetime import datetime
-from grabit.present import generate_file_table, generate_file_size_table
+from grabit.present import generate_file_table, generate_file_bytes_table
 
 
 def copy_to_clipboard(text: str):
@@ -21,31 +21,33 @@ def copy_to_clipboard(text: str):
         process.communicate(input=text.encode("utf-8"))
 
 
-def read_gitignore(directory: str) -> Tuple[Set[str], str]:
+def read_dot_grabit(directory: str) -> Tuple[Set[str], str]:
     """
     Reads a .grabit file (if present) and returns:
     - A set of patterns as re.compile objects to ignore
     - A custom message to prepend to the context (if specified)
     """
-    gitignore_path = Path(directory) / ".grabit"
+    dot_grabit_path = Path(directory) / ".grabit"
     ignore_patterns = set()
     custom_message = (
         "Below is a list of related files, their contents and git history.\n\n"
     )
 
-    if gitignore_path.exists():
+    if dot_grabit_path.exists():
         print("--- Found .grabit ---")
         current_section = None
         message_lines = []
 
-        with open(gitignore_path, "r", encoding="utf-8") as f:
+        with open(dot_grabit_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line.startswith("## "):
                     current_section = line[3:].lower()
                     continue
 
-                if not line or line.startswith("//"):  # Skip comments and empty lines
+                if not line or line.startswith(
+                    "//"
+                ):  # Skip comments and empty lines
                     continue
 
                 if current_section == "exclude":
@@ -75,7 +77,9 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     ]
 
     try:
-        result = subprocess.run(git_log_cmd, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            git_log_cmd, capture_output=True, text=True, check=True
+        )
         history = result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Error running git log: {e}")
@@ -93,7 +97,9 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     return (history, last_modified, last_author)
 
 
-def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> bool:
+def is_ignored(
+    file_path: str, ignore_patterns: Set[str], base_path: str
+) -> bool:
     """Checks if a file matches a regex pattern from the .grabit config."""
     for pattern in ignore_patterns:
         found = pattern.match(file_path)
@@ -103,14 +109,90 @@ def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> boo
     return False
 
 
-def recursive_files(
+def prepare_scan(
+    path: str,
+    output: str = None,
+    to_clipboard: bool = False,
+    order: str = None,
+    git: bool = True,
+):
+    """Prepares a context string for AI to read, optionally saves or copies it."""
+    ignore_patterns, custom_message = read_dot_grabit(path)
+    print(git)
+    files = scan_files(path, ignore_patterns, git=git)
+
+    # The context string builds the message for the LLM
+    # It starts with a default message.
+    context = (
+        "Below is a list of related files, their contents and git history.\n\n"
+    )
+
+    if custom_message is not None:
+        context = custom_message
+
+    for file in files:
+        print(file.path)
+        unix_style_path = file.path.replace("\\", "/")
+        context += f"## `{unix_style_path}`:\n### Git History:\n{file.git_history}\n### Contents:\n```\n{file.contents}\n```\n\n"
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(context)
+        print(f"Context saved to {output}")
+
+    if to_clipboard:
+        print("Context copied to clipboard.")
+        copy_to_clipboard(context)
+
+    if not output and not to_clipboard:
+        print(context)
+        print("\nUse the `-c` flag to copy this context to clipboard.")
+        print("Use the `-o <your-file-name>` flag to save it to a file.")
+
+    # Show information to the user for them
+    print("--- File Table ---")
+
+    # Order the files
+    if order is not None:
+        # Get sorting details
+        if ":" in order:
+            column, direction = order.split(":")
+        else:
+            column, direction = order, None
+
+        reverse = direction == "desc"
+
+        if column == "path":
+            files.sort(key=lambda x: x.path, reverse=reverse)
+        elif column == "tokens":
+            files.sort(key=lambda x: x.tokens, reverse=reverse)
+        elif column == "author":
+            files.sort(key=lambda x: x.last_author, reverse=reverse)
+        elif column == "modified":
+            files.sort(key=lambda x: x.last_modified, reverse=reverse)
+
+    print(generate_file_table(files))
+
+    print(f"\nPrompt Size: {len(context)} Chars")
+    print(f"Prompt Size: {round(len(context)/4)} Tokens (Rough estimate).")
+    print(f"Total files: {len(files)}")
+
+    return context
+
+
+def scan_files(
     path: str,
     ignore_patterns: Set[str],
     data: List[File] = [],
+    git: bool = True,
 ) -> List[File]:
     """Recursively gets all file paths and contents in a directory, respecting .gitignore."""
-    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    directories = [
+        d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))
+    ]
+    files = [
+        f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))
+    ]
 
     for file in files:
         file_path = os.path.join(path, file)
@@ -123,8 +205,11 @@ def recursive_files(
             with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
                 contents = f.read()
 
-            # Used to improve presentation on the command line
-            git_data = get_git_data(file_path)
+            # Adds git history for extra file context for the LLM
+            if git:
+                git_data = get_git_data(file_path)
+            else:
+                git_data = None
 
             if git_data is None:
                 git_history = None
@@ -150,62 +235,51 @@ def recursive_files(
             print(f"Skipping {file_path}: {e}")
 
     for directory in directories:
-        recursive_files(os.path.join(path, directory), ignore_patterns, data)
+        scan_files(
+            os.path.join(path, directory),
+            ignore_patterns,
+            data,
+            git=git,
+        )
 
     return data
 
 
-def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
-    """Prepares a context string for AI to read, optionally saves or copies it."""
-    ignore_patterns, custom_message = read_gitignore(path)
-    files = recursive_files(path, ignore_patterns)
-
-    # The context string builds the message for the LLM
-    # It starts with a default message.
-    context = "Below is a list of related files, their contents and git history.\n\n"
-
-    if custom_message is not None:
-        context = custom_message
-
-    for file in files:
-        unix_style_path = file.path.replace("\\", "/")
-        context += f"## `{unix_style_path}`:\n### Git History:\n{file.git_history}\n### Contents:\n```\n{file.contents}\n```\n\n"
-
-    if output:
-        with open(output, "w", encoding="utf-8") as f:
-            f.write(context)
-        print(f"Context saved to {output}")
-
-    if to_clipboard:
-        print("Context copied to clipboard.")
-        copy_to_clipboard(context)
-
-    if not output and not to_clipboard:
-        print(context)
-        print("\nUse the `-c` flag to copy this context to clipboard.")
-        print("Use the `-o <your-file-name>` flag to save it to a file.")
-
-    # Show information to the user for them
-    print("--- File Table ---")
-    print(generate_file_table(files))
-
-    print(f"\nPrompt Size: {len(context)} Chars")
-    print(f"Prompt Size: {round(len(context)/4)} Tokens (Rough estimate).")
-    print(f"Total files: {len(files)}")
-
-    return context
-
-
-def prepare_file_sizes(path: str, output: str = None, to_clipboard: bool = False):
+def prepare_byte_scan(
+    path: str,
+    output: str = None,
+    to_clipboard: bool = False,
+    order: str = None,
+):
     """Prepares a context string for AI to read, and outputs a table of file sizes."""
-    ignore_patterns, _ = read_gitignore(path)
+    ignore_patterns, custom_message = read_dot_grabit(path)
 
-    file_sizes = size_files(path, ignore_patterns)
+    file_bytes = byte_scan(path, ignore_patterns)
 
+    # Starting the context
     context = "Below is a list of files and their sizes.\n\n"
 
-    file_sizes_table = generate_file_size_table(file_sizes)
+    # Order the files
+    if order is not None:
+        # Get sorting details
+        if ":" in order:
+            column, direction = order.split(":")
+        else:
+            column, direction = order, None
 
+        reverse = direction == "desc"
+
+        if column == "path":
+            file_bytes.sort(key=lambda x: x.path, reverse=reverse)
+        elif column == "bytes":
+            file_bytes.sort(key=lambda x: x.bytes, reverse=reverse)
+        elif column == "modified":
+            file_bytes.sort(key=lambda x: x.last_modified, reverse=reverse)
+
+    # Generate the table using the ordered data
+    file_sizes_table = generate_file_bytes_table(file_bytes)
+
+    # Print the table for the user
     print(file_sizes_table)
 
     if output:
@@ -226,8 +300,12 @@ def byte_scan(
     data: List[FileSize] = [],
 ) -> List[FileSize]:
     """Returns a list of FileSize objects."""
-    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
-    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+    directories = [
+        d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))
+    ]
+    files = [
+        f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))
+    ]
 
     for file in files:
         file_path = os.path.join(path, file)
@@ -237,13 +315,13 @@ def byte_scan(
             continue
 
         try:
-            size_mb = os.path.getsize(file_path) / (1024)  # Get in KB
+            size_bytes = os.path.getsize(file_path)  # Keep it in bytes
             last_modified = datetime.fromtimestamp(os.path.getmtime(file_path))
 
             data.append(
                 FileSize(
                     path=file_path,
-                    size=size_mb,
+                    bytes=size_bytes,
                     last_modified=last_modified,
                 )
             )
@@ -253,7 +331,7 @@ def byte_scan(
             print(f"Skipping {file_path}: {e}")
 
     for directory in directories:
-        size_files(os.path.join(path, directory), ignore_patterns, data)
+        byte_scan(os.path.join(path, directory), ignore_patterns, data)
 
     return data
 
@@ -278,7 +356,9 @@ def main():
     scan_parser = subparser.add_parser(
         "scan", help="Scan a directory and save/copy the context"
     )
-    scan_parser.add_argument("directory", type=str, help="The directory to scan")
+    scan_parser.add_argument(
+        "directory", type=str, help="The directory to scan"
+    )
     scan_parser.add_argument(
         "-o", "--output", type=str, help="File to save extracted content"
     )
@@ -287,23 +367,40 @@ def main():
         "--clipboard",
         action="store_true",
         help="Copy output to clipboard",
+    )
+    scan_parser.add_argument(
+        "--order",
+        type=str,
+        help="The ordering to give the results, you can order in desc or asc. The default is the order of the files as they're found. You can order by 'path', 'bytes', 'modified', the default is ascending. If you want descending write the column name, separated by a colon and then the ordering: 'path:desc'",
+    )
+    scan_parser.add_argument(
+        "-ng",
+        "--no-git",
+        action="store_false",
+        help="Sets flag to *NOT* include the git log history of the searched files. This reduces token count and can speed up the scan process. Git history is collected by default.",
     )
 
-    size_parser = subparser.add_parser(
-        "size",
+    # Parser for getting file bytes
+    byte_parser = subparser.add_parser(
+        "bytes",
         help="Get all the sizes of files in a directory, faster to quickly figure out exclude and include. Can be used to generate a table that is sent to AI.",
     )
-    size_parser.add_argument(
+    byte_parser.add_argument(
         "directory", type=str, help="The directory to scan for file sizes."
     )
-    size_parser.add_argument(
+    byte_parser.add_argument(
         "-o", "--output", type=str, help="File to save extracted content"
     )
-    size_parser.add_argument(
+    byte_parser.add_argument(
         "-c",
         "--clipboard",
         action="store_true",
         help="Copy output to clipboard",
+    )
+    byte_parser.add_argument(
+        "--order",
+        type=str,
+        help="The ordering to give the results, you can order in desc or asc. The default is the order of the files as they're found. You can order by 'path', 'tokens', 'author', 'modified', the default is ascending. If you want descending write the column name, separated by a colon and then the ordering: 'path:desc'",
     )
 
     args = parser.parse_args()
@@ -311,10 +408,19 @@ def main():
     if args.command == "init":
         init_command()
     elif args.command == "scan":
-        prepare_context(args.directory, output=args.output, to_clipboard=args.clipboard)
-    elif args.command == "size":
-        prepare_file_sizes(
-            args.directory, output=args.output, to_clipboard=args.clipboard
+        prepare_scan(
+            args.directory,
+            output=args.output,
+            to_clipboard=args.clipboard,
+            order=args.order,
+            git=args.no_git,
+        )
+    elif args.command == "bytes":
+        prepare_byte_scan(
+            args.directory,
+            output=args.output,
+            to_clipboard=args.clipboard,
+            order=args.order,
         )
 
 
