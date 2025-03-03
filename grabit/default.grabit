@@ -31,3 +31,13 @@
 
 ## message
 
+// This option can be overridden by the command line argument -ng (--no-git)
+// When set, will switch off the git history of the files read by `grabit scan`
+## git file logs
+true
+
+// When set, grabit will get the git history of the entire repo and append it to
+// the context for the LLM to get more overall context of what's happened.
+## git all logs
+false
+
