@@ -4,7 +4,7 @@ import argparse
 import subprocess
 from pathlib import Path
 import re
-from typing import List, Set, Tuple
+from typing import List, Set, Tuple, Dict, Any
 from grabit.models import File, FileSize
 from datetime import datetime
 from grabit.present import generate_file_table, generate_file_bytes_table
@@ -21,17 +21,21 @@ def copy_to_clipboard(text: str):
         process.communicate(input=text.encode("utf-8"))
 
 
-def read_dot_grabit(directory: str) -> Tuple[Set[str], str]:
+def read_dot_grabit(directory: str) -> Tuple[Set[str], str, Dict[str, Any]]:
     """
     Reads a .grabit file (if present) and returns:
     - A set of patterns as re.compile objects to ignore
     - A custom message to prepend to the context (if specified)
+    - A list of the options included in the .grabit file
     """
     dot_grabit_path = Path(directory) / ".grabit"
     ignore_patterns = set()
     custom_message = (
         "Below is a list of related files, their contents and git history.\n\n"
     )
+
+    # Options
+    options = {"git_file_logs": True, "git_all_logs": False}
 
     if dot_grabit_path.exists():
         print("--- Found .grabit ---")
@@ -50,17 +54,60 @@ def read_dot_grabit(directory: str) -> Tuple[Set[str], str]:
                 ):  # Skip comments and empty lines
                     continue
 
+                # Gathering include exclude
                 if current_section == "exclude":
                     ignore_patterns.add(re.compile(line))
                 elif current_section == "message":
                     message_lines.append(line)
+
+                # Gathering the options
+                elif current_section == "git file logs":
+                    if "true" in line:
+                        options["git_file_logs"] = True
+                    elif "false" in line:
+                        options["git_file_logs"] = False
+
+                elif current_section == "git all logs":
+                    if "true" in line:
+                        options["git_all_logs"] = True
+                    elif "false" in line:
+                        options["git_all_logs"] = False
 
         if message_lines:
             custom_message = "\n".join(message_lines) + "\n\n"
 
     print("--- ignore patterns ---")
     print(ignore_patterns)
-    return ignore_patterns, custom_message
+    return ignore_patterns, custom_message, options
+
+
+def get_all_git_data(path: str) -> str | None:
+    """Get all the git logs for the path you've chosen to scan"""
+    git_log_cmd = [
+        "git",
+        "-C",  # Change directory to path before running
+        path,
+        "log",
+        "--pretty=format:%h | %an | %ad | %s",  # Gets the author name, and author date
+        "--date=short",
+        "--reverse",
+    ]
+
+    try:
+        result = subprocess.run(
+            git_log_cmd,
+            capture_output=True,
+            text=True,
+            check=True,
+            encoding="utf-8",
+            errors="replace",
+        )
+        history = result.stdout
+    except subprocess.CalledProcessError as e:
+        print(f"Error running git log: {e}")
+        return None
+
+    return history
 
 
 def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
@@ -117,8 +164,12 @@ def prepare_scan(
     git: bool = True,
 ):
     """Prepares a context string for AI to read, optionally saves or copies it."""
-    ignore_patterns, custom_message = read_dot_grabit(path)
-    print(git)
+    ignore_patterns, custom_message, options = read_dot_grabit(path)
+
+    # Apply the options
+    if options["git_file_logs"] is False:
+        git = False
+
     files = scan_files(path, ignore_patterns, git=git)
 
     # The context string builds the message for the LLM
@@ -130,6 +181,15 @@ def prepare_scan(
     if custom_message is not None:
         context = custom_message
 
+    # Add the full git history if asked for
+    if options["git_all_logs"]:
+        git_history = get_all_git_data(path)
+
+        # Only add if it is a repo
+        if git_history is not None:
+            context += f"## All the git history for the scanned repo is below:\n{git_history}\n\n"
+
+    # Add all the files
     for file in files:
         print(file.path)
         unix_style_path = file.path.replace("\\", "/")
@@ -167,9 +227,15 @@ def prepare_scan(
         elif column == "tokens":
             files.sort(key=lambda x: x.tokens, reverse=reverse)
         elif column == "author":
-            files.sort(key=lambda x: x.last_author, reverse=reverse)
+            files.sort(
+                key=lambda x: (x.last_author is None, x.last_author),
+                reverse=reverse,
+            )
         elif column == "modified":
-            files.sort(key=lambda x: x.last_modified, reverse=reverse)
+            files.sort(
+                key=lambda x: (x.last_modified is None, x.last_modified),
+                reverse=reverse,
+            )
 
     print(generate_file_table(files))
 
@@ -252,7 +318,7 @@ def prepare_byte_scan(
     order: str = None,
 ):
     """Prepares a context string for AI to read, and outputs a table of file sizes."""
-    ignore_patterns, custom_message = read_dot_grabit(path)
+    ignore_patterns, _ = read_dot_grabit(path)
 
     file_bytes = byte_scan(path, ignore_patterns)
 
@@ -274,7 +340,10 @@ def prepare_byte_scan(
         elif column == "bytes":
             file_bytes.sort(key=lambda x: x.bytes, reverse=reverse)
         elif column == "modified":
-            file_bytes.sort(key=lambda x: x.last_modified, reverse=reverse)
+            file_bytes.sort(
+                key=lambda x: (x.last_modified is None, x.last_modified),
+                reverse=reverse,
+            )
 
     # Generate the table using the ordered data
     file_sizes_table = generate_file_bytes_table(file_bytes)
