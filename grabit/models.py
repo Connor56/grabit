@@ -11,3 +11,10 @@ class File:
     tokens: int
     last_author: str
     last_modified: datetime
+
+
+@dataclasses.dataclass
+class FileSize:
+    path: str
+    size: float
+    last_modified: datetime

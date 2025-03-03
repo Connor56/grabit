@@ -5,9 +5,9 @@ import subprocess
 from pathlib import Path
 import re
 from typing import List, Set, Tuple
-from grabit.models import File
+from grabit.models import File, FileSize
 from datetime import datetime
-from grabit.present import generate_file_table
+from grabit.present import generate_file_table, generate_file_size_table
 
 
 def copy_to_clipboard(text: str):
@@ -45,9 +45,7 @@ def read_gitignore(directory: str) -> Tuple[Set[str], str]:
                     current_section = line[3:].lower()
                     continue
 
-                if not line or line.startswith(
-                    "//"
-                ):  # Skip comments and empty lines
+                if not line or line.startswith("//"):  # Skip comments and empty lines
                     continue
 
                 if current_section == "exclude":
@@ -77,9 +75,7 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     ]
 
     try:
-        result = subprocess.run(
-            git_log_cmd, capture_output=True, text=True, check=True
-        )
+        result = subprocess.run(git_log_cmd, capture_output=True, text=True, check=True)
         history = result.stdout
     except subprocess.CalledProcessError as e:
         print(f"Error running git log: {e}")
@@ -97,9 +93,7 @@ def get_git_data(file_path: str) -> Tuple[str, datetime, str] | None:
     return (history, last_modified, last_author)
 
 
-def is_ignored(
-    file_path: str, ignore_patterns: Set[str], base_path: str
-) -> bool:
+def is_ignored(file_path: str, ignore_patterns: Set[str], base_path: str) -> bool:
     """Checks if a file matches a regex pattern from the .grabit config."""
     for pattern in ignore_patterns:
         found = pattern.match(file_path)
@@ -115,12 +109,8 @@ def recursive_files(
     data: List[File] = [],
 ) -> List[File]:
     """Recursively gets all file paths and contents in a directory, respecting .gitignore."""
-    directories = [
-        d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))
-    ]
-    files = [
-        f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))
-    ]
+    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
 
     for file in files:
         file_path = os.path.join(path, file)
@@ -172,9 +162,7 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
 
     # The context string builds the message for the LLM
     # It starts with a default message.
-    context = (
-        "Below is a list of related files, their contents and git history.\n\n"
-    )
+    context = "Below is a list of related files, their contents and git history.\n\n"
 
     if custom_message is not None:
         context = custom_message
@@ -197,12 +185,66 @@ def prepare_context(path: str, output: str = None, to_clipboard: bool = False):
         print("\nUse the `-c` flag to copy this context to clipboard.")
         print("Use the `-o <your-file-name>` flag to save it to a file.")
 
+    # Show information to the user for them
+    print("--- File Table ---")
+    print(generate_file_table(files))
+
     print(f"\nPrompt Size: {len(context)} Chars")
     print(f"Prompt Size: {round(len(context)/4)} Tokens (Rough estimate).")
     print(f"Total files: {len(files)}")
-    print(generate_file_table(files))
 
     return context
+
+
+def prepare_file_sizes(path: str, output: str = None, to_clipboard: bool = False):
+    """Prepares a context string for AI to read, and outputs a table of file sizes."""
+    ignore_patterns, _ = read_gitignore(path)
+
+    file_sizes = size_files(path, ignore_patterns)
+
+    context = "Below is a list of files and their sizes.\n\n"
+
+    print(generate_file_size_table(file_sizes))
+
+    return context
+
+
+def size_files(
+    path: str,
+    ignore_patterns: Set[str],
+    data: List[FileSize] = [],
+) -> List[FileSize]:
+    """Returns a list of FileSize objects."""
+    directories = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+    for file in files:
+        file_path = os.path.join(path, file)
+
+        if is_ignored(file_path, ignore_patterns, path):
+            print(f"Skipping ignored file: {file_path}")
+            continue
+
+        try:
+            size_mb = os.path.getsize(file_path) / (1024 * 1024)
+            last_modified = datetime.fromtimestamp(os.path.getmtime(file_path))
+
+            data.append(
+                FileSize(
+                    path=file_path,
+                    size=size_mb,
+                    last_modified=last_modified,
+                )
+            )
+
+            print(f"Found: {file_path}")
+        except Exception as e:
+            print(f"Skipping {file_path}: {e}")
+
+    for directory in directories:
+        size_files(os.path.join(path, directory), ignore_patterns, data)
+
+    return data
 
 
 from grabit.initialisation import init_command
@@ -225,13 +267,28 @@ def main():
     scan_parser = subparser.add_parser(
         "scan", help="Scan a directory and save/copy the context"
     )
-    scan_parser.add_argument(
-        "directory", type=str, help="The directory to scan"
-    )
+    scan_parser.add_argument("directory", type=str, help="The directory to scan")
     scan_parser.add_argument(
         "-o", "--output", type=str, help="File to save extracted content"
     )
     scan_parser.add_argument(
+        "-c",
+        "--clipboard",
+        action="store_true",
+        help="Copy output to clipboard",
+    )
+
+    size_parser = subparser.add_parser(
+        "size",
+        help="Get all the sizes of files in a directory, faster to quickly figure out exclude and include. Can be used to generate a table that is sent to AI.",
+    )
+    size_parser.add_argument(
+        "directory", type=str, help="The directory to scan for file sizes."
+    )
+    size_parser.add_argument(
+        "-o", "--output", type=str, help="File to save extracted content"
+    )
+    size_parser.add_argument(
         "-c",
         "--clipboard",
         action="store_true",
@@ -243,7 +300,9 @@ def main():
     if args.command == "init":
         init_command()
     elif args.command == "scan":
-        prepare_context(
+        prepare_context(args.directory, output=args.output, to_clipboard=args.clipboard)
+    elif args.command == "size":
+        prepare_file_sizes(
             args.directory, output=args.output, to_clipboard=args.clipboard
         )
 
