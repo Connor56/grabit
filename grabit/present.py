@@ -39,7 +39,9 @@ def format_table(
 
     # Combine all parts
     return "\n".join(
-        [top_bottom_border, header, separator] + formatted_rows + [top_bottom_border]
+        [top_bottom_border, header, separator]
+        + formatted_rows
+        + [top_bottom_border]
     )
 
 
@@ -63,7 +65,13 @@ def generate_file_table(files: List[File]) -> str:
         )
 
     # Calculate column widths
-    headers = ["File Path", "Size (chars)", "Tokens", "Last Modified By", "Date"]
+    headers = [
+        "File Path",
+        "Size (chars)",
+        "Tokens",
+        "Last Modified By",
+        "Date",
+    ]
     widths = [
         max(len(header), max(len(row[i]) for row in rows))
         for i, header in enumerate(headers)
@@ -77,17 +85,21 @@ def generate_file_table(files: List[File]) -> str:
     )
 
 
-def generate_file_size_table(files: List[FileSize]) -> str:
+def generate_file_bytes_table(files: List[FileSize]) -> str:
     """Generates a formatted table showing file sizes and last modified dates."""
     if not files:
         return "No files found"
 
     rows = [
-        [file.path, f"{file.size:.2f}", file.last_modified.strftime("%Y-%m-%d")]
+        [
+            file.path,
+            f"{file.bytes}",
+            file.last_modified.strftime("%Y-%m-%d"),
+        ]
         for file in files
     ]
 
-    headers = ["File Path", "Size (KB)", "Last Modified"]
+    headers = ["File Path", "Size (Bytes)", "Last Modified"]
     widths = [
         max(len(header), max(len(row[i]) for row in rows))
         for i, header in enumerate(headers)
