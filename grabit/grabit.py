@@ -204,9 +204,20 @@ def prepare_file_sizes(path: str, output: str = None, to_clipboard: bool = False
 
     context = "Below is a list of files and their sizes.\n\n"
 
-    print(generate_file_size_table(file_sizes))
+    file_sizes_table = generate_file_size_table(file_sizes)
 
-    return context
+    print(file_sizes_table)
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(file_sizes_table)
+        print(f"File sizes saved to {output}")
+
+    if to_clipboard:
+        print("File sizes copied to clipboard.")
+        copy_to_clipboard(file_sizes_table)
+
+    return file_sizes_table
 
 
 def size_files(
@@ -226,7 +237,7 @@ def size_files(
             continue
 
         try:
-            size_mb = os.path.getsize(file_path) / (1024 * 1024)
+            size_mb = os.path.getsize(file_path) / (1024)  # Get in KB
             last_modified = datetime.fromtimestamp(os.path.getmtime(file_path))
 
             data.append(

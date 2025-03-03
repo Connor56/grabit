@@ -87,7 +87,7 @@ def generate_file_size_table(files: List[FileSize]) -> str:
         for file in files
     ]
 
-    headers = ["File Path", "Size (MB)", "Last Modified"]
+    headers = ["File Path", "Size (KB)", "Last Modified"]
     widths = [
         max(len(header), max(len(row[i]) for row in rows))
         for i, header in enumerate(headers)
