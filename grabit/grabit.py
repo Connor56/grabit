@@ -7,7 +7,12 @@ import re
 from typing import List, Set, Tuple, Dict, Any
 from grabit.models import File, FileSize
 from datetime import datetime
-from grabit.present import generate_file_table, generate_file_bytes_table
+from grabit.present import (
+    generate_file_table,
+    generate_file_bytes_table,
+    generate_file_ending_table,
+)
+from grabit.analyse import group_bytes_by_file_endings
 
 
 def copy_to_clipboard(text: str):
@@ -362,9 +367,18 @@ def prepare_byte_scan(
     if to_clipboard:
         copy_to_clipboard(file_sizes_table)
         print("File sizes copied to clipboard.")
-        all_bytes = sum([f.bytes for f in file_bytes])
-        print(f"Total bytes: {all_bytes}")
-        print(f"Total MB: {round(all_bytes/1024**2, 4)}")
+
+    # Group file ending groups for the user
+    grouped_bytes = group_bytes_by_file_endings(file_bytes)
+    file_ending_table = generate_file_ending_table(grouped_bytes)
+
+    print("Bytes table")
+    print(file_ending_table)
+
+    # Print summary information for the user
+    all_bytes = sum([f.bytes for f in file_bytes])
+    print(f"Total bytes: {all_bytes}")
+    print(f"Total MB: {round(all_bytes/1024**2, 4)}")
 
     return file_sizes_table
 

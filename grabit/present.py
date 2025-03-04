@@ -248,3 +248,28 @@ def generate_file_bytes_table(
         column_widths=widths,
         align_right_columns=[1],  # Size column right-aligned
     )
+
+
+def generate_file_ending_table(file_bytes: List[Tuple[str, int]]) -> str:
+    """Generate a table from file bytes ordered as a list of tuples. Index 0 of
+    the tuple is the file ending, and index 2 is the number of bytes"""
+    # Prepare the rows
+    rows = [
+        [fb[0], str(fb[1]), str(round(fb[1] / 1024**2, 4))] for fb in file_bytes
+    ]
+
+    # Prepare the headers
+    headers = ["File Ending", "Total Bytes", "Total MB"]
+
+    # Calculate column widths
+    widths = [
+        max(len(header), max(len(row[i]) for row in rows))
+        for i, header in enumerate(headers)
+    ]
+
+    return format_table(
+        headers=headers,
+        rows=rows,
+        column_widths=widths,
+        align_right_columns=[1],  # Bytes column right aligned
+    )
