@@ -250,16 +250,17 @@ def generate_file_bytes_table(
     )
 
 
-def generate_file_ending_table(file_bytes: List[Tuple[str, int]]) -> str:
+def generate_file_ending_table(file_bytes: List[Tuple[str, List[int]]]) -> str:
     """Generate a table from file bytes ordered as a list of tuples. Index 0 of
     the tuple is the file ending, and index 2 is the number of bytes"""
     # Prepare the rows
     rows = [
-        [fb[0], str(fb[1]), str(round(fb[1] / 1024**2, 4))] for fb in file_bytes
+        [fb[0], str(fb[1][0]), str(round(fb[1][0] / 1024**2, 4)), str(fb[1][1])]
+        for fb in file_bytes
     ]
 
     # Prepare the headers
-    headers = ["File Ending", "Total Bytes", "Total MB"]
+    headers = ["File Ending", "Total Bytes", "Total MB", "Total Files"]
 
     # Calculate column widths
     widths = [

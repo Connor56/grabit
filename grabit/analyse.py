@@ -2,8 +2,11 @@ from grabit.models import FileSize
 from typing import List, Tuple
 
 
-def group_bytes_by_file_endings(files: List[FileSize]) -> List[Tuple[str, int]]:
-    """Groups files by their file path endings and sums the bytes and orders on size"""
+def group_bytes_by_file_endings(
+    files: List[FileSize],
+) -> List[Tuple[str, List[int]]]:
+    """Groups files by their file path endings and sums the bytes and orders on size,
+    also includes the total number of files of that type."""
     bytes_table = {}
 
     for f in files:
@@ -21,10 +24,11 @@ def group_bytes_by_file_endings(files: List[FileSize]) -> List[Tuple[str, int]]:
             file_ending = "(No Ending)"
 
         if file_ending in bytes_table:
-            bytes_table[file_ending] += f.bytes
+            bytes_table[file_ending][0] += f.bytes
+            bytes_table[file_ending][1] += 1
 
         else:
-            bytes_table[file_ending] = f.bytes
+            bytes_table[file_ending] = [f.bytes, 1]
 
     # Order by size
     bytes_list = list(bytes_table.items())
