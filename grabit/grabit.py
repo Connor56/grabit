@@ -349,7 +349,7 @@ def prepare_byte_scan(
     file_sizes_table_coloured = generate_file_bytes_table(
         file_bytes, colour=True
     )
-    file_sizes_table = generate_file_bytes_table(file_bytes, colour=True)
+    file_sizes_table = generate_file_bytes_table(file_bytes)
 
     # Print the table for the user
     print(file_sizes_table_coloured)
