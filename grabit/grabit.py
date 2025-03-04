@@ -356,21 +356,27 @@ def prepare_byte_scan(
     )
     file_sizes_table = generate_file_bytes_table(file_bytes)
 
+    # Group file ending groups for the user
+    grouped_bytes = group_bytes_by_file_endings(file_bytes)
+    file_ending_table = generate_file_ending_table(grouped_bytes)
+
+    context += (
+        file_sizes_table
+        + "\n\nBelow is a table of the files grouped by ending\n\n"
+    )
+    context += file_ending_table
+
     # Print the table for the user
     print(file_sizes_table_coloured)
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
-            f.write(file_sizes_table)
+            f.write(context)
         print(f"File sizes saved to {output}")
 
     if to_clipboard:
-        copy_to_clipboard(file_sizes_table)
+        copy_to_clipboard(context)
         print("File sizes copied to clipboard.")
-
-    # Group file ending groups for the user
-    grouped_bytes = group_bytes_by_file_endings(file_bytes)
-    file_ending_table = generate_file_ending_table(grouped_bytes)
 
     print("Bytes table")
     print(file_ending_table)
