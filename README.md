@@ -4,14 +4,35 @@
 
 # grabit
 
-`grabit` is a command-line tool for recursively scanning a directory, extracting file contents, and saving or copying them to the clipboard while respecting `.grabit` ignore rules. The tool helps turn complex projects into LLM input for big context questions.
+`grabit` is a command-line tool for recursively scanning a directory, extracting file contents, and saving or copying them to the clipboard while respecting `.grabit` rules. The tool helps turn complex projects into LLM input for big context questions.
+
+## Development Note
+
+I will endeavour to keep the docs on how to use `grabit` up to date, but time constraints mean they will likely slip behind as I ship features. The easiest way to see all the options available is to clone the repo run `grabit` on it and ask an LLM what's available! LOL. Or just read the source code if you know your Python.
 
 ## Features
 
+- `grabit` is a pure Python CLI. No dependencies. So it works out of the box on Windows, macOS, and Linux.
+
+### Scan
+
 - Recursively extracts file contents from a directory.
-- Respects `.grabit` ignore files (similar to `.gitignore`).
+- By default, includes git logs for the file to add extra context. This can be switched off with the flag `--no-git` or `-ng`. Turning off git significantly speeds up the process and reduces token count.
+- Respects `.grabit` rules.
 - Saves extracted content to a file or copies it to the clipboard.
-- Works on Windows, macOS, and Linux.
+- Prints a table of the files, with git information, and token sizes for files, with colour coding based on size in tokens.
+- The table is orderable by the columns.
+
+### bytes
+
+- Recursively scans a directory and gets the size of all files in bytes.
+- Very fast process, used to help you decide the regex you want to include or exclude. Fast iteration is the goal here.
+- Prints out a table for the user to view, table can also be saved to file or copied to clipboard so you can paste into an LLM for advice.
+- Colour coded byte sizes to help you understand the percentile differences in size.
+
+### init
+
+- Creates a default `.grabit` file with some standard regex and options set with some commentary on how to set up the file.
 
 ## Installation
 
@@ -23,35 +44,115 @@ pip install grabit
 
 ## Usage
 
-### Basic Usage
+### Initialise a `.grabit` file
 
 ```sh
-grabit /path/to/directory
+grabit init
 ```
 
-### Save Output to a File
+This will create a file in your current directory called `.grabit`.
+
+### Scan a directory
+
+This command is what you'll use to generate input for an LLM.
+
+#### Standard
 
 ```sh
-grabit /path/to/directory -o output.txt
+grabit scan /path/to/directory
 ```
 
-### Copy Output to Clipboard
+The above command will output the LLM context to the terminal and ask you to use copy or output.
+
+#### Copy output to clipboard
 
 ```sh
-grabit /path/to/directory -c
+grabit scan /path/to/directory -c
+```
+
+#### Output to a file
+
+```sh
+grabit scan /path/to/directory -o some_output_file.txt
+```
+
+#### No git logs
+
+```sh
+grabit scan /path/to/directory -o some_output_file.txt -ng
+```
+
+#### Order output columns
+
+Order by descending on the path.
+
+```sh
+grabit scan /path/to/directory --order path:desc
+```
+
+Order by ascending on the last modified by:
+
+```sh
+grabit scan /path/to/directory --order modified:asc
+```
+
+By default `asc` is used if you don't add anything, so
+
+```sh
+grabit scan /path/to/directory --order modified
+```
+
+Is the same as the above. If you want to see all possible options use:
+
+```sh
+grabit scan --help
+```
+
+### Bytes a directory
+
+This command is what you'll use to quickly scan a directory and prepare your `.grabit` file for `scan`.
+
+#### Copy output to clipboard
+
+```sh
+grabit bytes /path/to/directory -c
+```
+
+#### Output to a file
+
+```sh
+grabit bytes /path/to/directory -o some_output_file.txt
+```
+
+#### Order output columns
+
+Order by descending on the path.
+
+```sh
+grabit bytes /path/to/directory --order path:desc
+```
+
+Order by ascending on the last modified by:
+
+```sh
+grabit scan /path/to/directory --order modified:asc
+```
+
+By default `asc` is used if you don't add anything, so
+
+```sh
+grabit scan /path/to/directory --order modified
+```
+
+Is the same as the above. If you want to see all possible options use:
+
+```sh
+grabit scan --help
 ```
 
 ## Ignore Files
 
-To ignore specific files or patterns, create a `.grabit` file in the root of your project. This works similarly to `.gitignore`.
-
-Example `.grabit`:
-
-```
-*.log
-__pycache__/
-secrets.txt
-```
+Please do `grabit init` and read the commentary in the file to see how these work. They are currently (2025-03-04) in a state of constant change. Once they're more stable I will add a full tutorial.
 
 ## Example Output
 
