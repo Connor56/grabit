@@ -360,8 +360,11 @@ def prepare_byte_scan(
         print(f"File sizes saved to {output}")
 
     if to_clipboard:
-        print("File sizes copied to clipboard.")
         copy_to_clipboard(file_sizes_table)
+        print("File sizes copied to clipboard.")
+        all_bytes = sum([f.bytes for f in file_bytes])
+        print(f"Total bytes: {all_bytes}")
+        print(f"Total MB: {round(all_bytes/1024**2, 4)}")
 
     return file_sizes_table
 
