@@ -237,7 +237,7 @@ def prepare_scan(
                 reverse=reverse,
             )
 
-    print(generate_file_table(files))
+    print(generate_file_table(files, colour=True))
 
     print(f"\nPrompt Size: {len(context)} Chars")
     print(f"Prompt Size: {round(len(context)/4)} Tokens (Rough estimate).")
@@ -346,10 +346,13 @@ def prepare_byte_scan(
             )
 
     # Generate the table using the ordered data
-    file_sizes_table = generate_file_bytes_table(file_bytes)
+    file_sizes_table_coloured = generate_file_bytes_table(
+        file_bytes, colour=True
+    )
+    file_sizes_table = generate_file_bytes_table(file_bytes, colour=True)
 
     # Print the table for the user
-    print(file_sizes_table)
+    print(file_sizes_table_coloured)
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
