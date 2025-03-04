@@ -9,10 +9,19 @@ def group_bytes_by_file_endings(files: List[FileSize]) -> List[Tuple[str, int]]:
     for f in files:
         # Frequently, files can have more than one ending. e.g. `.d.ts` instead of `.ts`
         # the method below makes sure we capture the everything past the first dot.
-        file_ending = ".".join(f.path.split(".")[1:])
+        path = f.path
+
+        # Ignore the dots that can appear at start of file paths
+        if path[0] == "." and "\\" in path or "/" in path:
+            path = path[1:]
+
+        file_ending = ".".join(path.split(".")[1:])
+
+        if file_ending == "":
+            file_ending = "(No Ending)"
 
         if file_ending in bytes_table:
-            bytes_table += f.bytes
+            bytes_table[file_ending] += f.bytes
 
         else:
             bytes_table[file_ending] = f.bytes
