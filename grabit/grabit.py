@@ -318,7 +318,7 @@ def prepare_byte_scan(
     order: str = None,
 ):
     """Prepares a context string for AI to read, and outputs a table of file sizes."""
-    ignore_patterns, _ = read_dot_grabit(path)
+    ignore_patterns, _, _ = read_dot_grabit(path)
 
     file_bytes = byte_scan(path, ignore_patterns)
 
