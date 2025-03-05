@@ -209,7 +209,8 @@ Major.Minor.Patch
 - [x] ~~add an option to order table output by token sizes, last modified by, by order scanned, by file path, and by date last modified.~~
 - [x] ~~add an option for quickly scanning through a directory and getting sizes in bytes very quickly to make choice on inclusion faster.~~
 - [x] ~~improve the option for fast search to include colour coding and ordering by column.~~
-- [ ] update the bytes command so that the file endings also have their total bytes colour coded.
+- [ ] update the `bytes` command so that the file endings also have their total bytes colour coded.
+- [ ] use the `curses` built in python package to make a terminal app for automated actions: https://docs.python.org/3/howto/curses.html
 
 ## License
 
