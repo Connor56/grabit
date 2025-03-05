@@ -202,7 +202,9 @@ def prepare_scan(
 
         file_contents = file.contents
         removal_message = "\n...\n<All further Tokens removed for brevity>"
-        max_size = len(removal_message) + max_tokens
+        max_size = (
+            len(removal_message) + max_tokens if max_tokens is not None else 0
+        )
 
         # Deal with large files
         if max_tokens is not None and len(file_contents) > max_size:
