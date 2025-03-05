@@ -1,5 +1,6 @@
 from grabit.models import FileSize
-from typing import List, Tuple
+from typing import List, Tuple, Dict
+import platform
 
 
 def group_bytes_by_file_endings(
@@ -35,3 +36,58 @@ def group_bytes_by_file_endings(
     bytes_list.sort(key=lambda x: x[1])
 
     return bytes_list
+
+
+def group_bytes_by_file_paths(
+    files: List[FileSize],
+) -> List[Dict[str, str | int]]:
+    """
+    Groups files by their file path and sums the bytes and orders on size,
+    also includes the total number of files of that type. This works by splitting
+    paths at the directory level and then joining them back up sequentially.
+    The results are stored in a dict that tracks the number of times they occur,
+    the amount of bytes that occur, and their path depth.
+
+    The output is sorted alphabetically because later on the total bytes can
+    be colour coded and seeing alphabetical grouping will reveal file patterns
+    whilst still making it easy to see where issues are.
+    """
+    if platform.system() == "Windows":
+        split_on = "\\"
+
+    all_paths = {}
+
+    for f in files:
+        path = f.path
+        split_path = path.split(split_on)
+
+        # Remove initial dot if present
+        if split_path[0] == ".":
+            split_path = split_path[1:]
+
+        # Because the path sections are being appended sequentially by the
+        # final section we will have recreated the full path, remove this file
+        # as this would be redundant.
+        split_path = split_path[:-1]
+        print(split_path)
+
+        for i in range(0, len(split_path)):
+            joined_path = "/".join(split_path[: i + 1])
+
+            if joined_path in all_paths:
+                data = all_paths[joined_path]
+                data["bytes"] += f.bytes
+                data["seen"] += 1
+
+            else:
+                all_paths[joined_path] = {
+                    "bytes": f.bytes,
+                    "seen": 1,
+                    "depth": i + 1,
+                }
+
+    # Sort alphabetically
+    path_list = [{"path": k} | v for k, v in all_paths.items()]
+    path_list.sort(key=lambda x: x["path"])
+
+    return path_list

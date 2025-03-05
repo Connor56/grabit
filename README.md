@@ -187,7 +187,7 @@ Major.Minor.Patch
 - [x] ~~tell the user the rough number of tokens that have been found across all the files.~~
 - [x] ~~predict the number of tokens in a file based on the number of characters in each file.~~
 - [ ] if the number of tokens is high, intelligently group files by suffix and prefix and ask the user if they'd like to include or exclude them.
-- [ ] ask the user if they'd like to include only a snippet of parts of long files, i.e. first 50 lines or so. Allow them to set this on a per file basis.
+- [x] ~~ask the user if they'd like to include only a snippet of parts of long files, i.e. first 50 lines or so. Allow them to set this on a per file basis.~~
 - [x] ~~add sensible defaults to the `.grabit` file produced by `grabit init`.~~
 - [ ] automatically generate or update the `.grabit` file to reflect the user's choices in the above two features.
 - [ ] ask the user if they want to include large directories as well, not just by prefix.
@@ -203,7 +203,7 @@ Major.Minor.Patch
 - [ ] add standard configuration setting for `.grabit` files. This will run through their directory and make decisions for them, outputting choices to the terminal for the user to review. e.g. skipping extra large files, or skipping known auto-genned file types like `.dll`.
 - [ ] add a terminal based configuration building process that guides users through the various `.grabit` options and lets them build their `.grabit` file via the terminal
 - [ ] add an option to set the target number of tokens that grabit should not go over. Then when grabit does go over it will make suggestions underneath the table on what you could do to lower the amount of tokens. If there are embeddings as well, this could be very helpful for figuring out how important different directory paths etc. are.
-- [ ] build directory path trees whilst collecting so that more than just the path name can be used to group the directories and find similarities that could be exploited for removing tokens.
+- [x] ~~build directory path trees whilst collecting so that more than just the path name can be used to group the directories and find similarities that could be exploited for removing tokens.~~
 - [x] ~~colour the output that's given to the user depending on size so it's easier to see patterns and make decisions on what to include or disclude.~~
 - [ ] potentially colour the file endings of different file types to also add a visual cue to the user.
 - [x] ~~add an option to order table output by token sizes, last modified by, by order scanned, by file path, and by date last modified.~~

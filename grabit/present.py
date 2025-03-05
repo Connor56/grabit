@@ -274,3 +274,60 @@ def generate_file_ending_table(file_bytes: List[Tuple[str, List[int]]]) -> str:
         column_widths=widths,
         align_right_columns=[1],  # Bytes column right aligned
     )
+
+
+def generate_common_file_paths_table(
+    common_file_paths: List[Dict[str, str | int]],
+    colour: bool = False,
+) -> str:
+    """Generate a table with colouring for the common file paths."""
+    # Get the data for colouring rows
+    bytes = [p["bytes"] for p in common_file_paths]
+    boundaries = get_boundaries(bytes)
+
+    coloured_rows = []
+    uncoloured_rows = []
+
+    for p in common_file_paths:
+        coloured_rows.append(
+            [
+                p["path"],
+                f"{colour_num(p['bytes'], boundaries)[0]}",
+                f"{p['seen']}",
+                f"{p['depth']}",
+            ]
+        )
+
+        # Get the rows uncoloured
+        uncoloured_rows.append(
+            [
+                p["path"],
+                f"{p['bytes']}",
+                f"{p['seen']}",
+                f"{p['depth']}",
+            ]
+        )
+
+    headers = ["Path", "Size (Bytes)", "Seen (Count)", "Path Depth"]
+    # Always use uncoloured rows for widths
+    widths = [
+        max(len(header), max(len(row[i]) for row in uncoloured_rows))
+        for i, header in enumerate(headers)
+    ]
+
+    if colour:
+        return format_table(
+            headers=headers,
+            rows=coloured_rows,
+            column_widths=widths,
+            # Size, seen, depth columns right-aligned
+            align_right_columns=[1, 2, 3],
+        )
+
+    return format_table(
+        headers=headers,
+        rows=uncoloured_rows,
+        column_widths=widths,
+        # Size, seen, depth columns right-aligned
+        align_right_columns=[1, 2, 3],
+    )

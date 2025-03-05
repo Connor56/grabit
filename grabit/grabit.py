@@ -11,8 +11,12 @@ from grabit.present import (
     generate_file_table,
     generate_file_bytes_table,
     generate_file_ending_table,
+    generate_common_file_paths_table,
 )
-from grabit.analyse import group_bytes_by_file_endings
+from grabit.analyse import (
+    group_bytes_by_file_endings,
+    group_bytes_by_file_paths,
+)
 
 
 def copy_to_clipboard(text: str):
@@ -372,14 +376,23 @@ def prepare_byte_scan(
     grouped_bytes = group_bytes_by_file_endings(file_bytes)
     file_ending_table = generate_file_ending_table(grouped_bytes)
 
-    context += (
-        file_sizes_table
-        + "\n\nBelow is a table of the files grouped by ending\n\n"
+    # Group common file paths by size
+    common_file_paths = group_bytes_by_file_paths(file_bytes)
+    common_file_paths_table_coloured = generate_common_file_paths_table(
+        common_file_paths, colour=True
     )
-    context += file_ending_table
 
-    # Print the table for the user
-    print(file_sizes_table_coloured)
+    # Generate the uncoloured table for llm output
+    common_file_paths_table = generate_common_file_paths_table(
+        common_file_paths
+    )
+
+    # Add the tables to the context
+    context += file_sizes_table
+    context += "\n\n## Below is a table of the files grouped by ending\n\n"
+    context += file_ending_table
+    context += "\n\n## Below is a table of the files grouped by path\n\n"
+    context += common_file_paths_table
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
@@ -390,13 +403,20 @@ def prepare_byte_scan(
         copy_to_clipboard(context)
         print("File sizes copied to clipboard.")
 
-    print("Bytes table")
+    # Print the table for the user
+    print(file_sizes_table_coloured)
+
+    print("\n--- File ending table ---")
     print(file_ending_table)
+
+    print("\n--- Common file paths table ---")
+    print(common_file_paths_table_coloured)
 
     # Print summary information for the user
     all_bytes = sum([f.bytes for f in file_bytes])
     print(f"Total bytes: {all_bytes}")
     print(f"Total MB: {round(all_bytes/1024**2, 4)}")
+    print(f"Total files: {len(file_bytes)}")
 
     return file_sizes_table
 
