@@ -337,6 +337,7 @@ def prepare_byte_scan(
     output: str = None,
     to_clipboard: bool = False,
     order: str = None,
+    file_paths: bool = False,
 ):
     """Prepares a context string for AI to read, and outputs a table of file sizes."""
     ignore_patterns, _, _ = read_dot_grabit(path)
@@ -391,8 +392,10 @@ def prepare_byte_scan(
     context += file_sizes_table
     context += "\n\n## Below is a table of the files grouped by ending\n\n"
     context += file_ending_table
-    context += "\n\n## Below is a table of the files grouped by path\n\n"
-    context += common_file_paths_table
+
+    if file_paths:
+        context += "\n\n## Below is a table of the files grouped by path\n\n"
+        context += common_file_paths_table
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
@@ -409,8 +412,9 @@ def prepare_byte_scan(
     print("\n--- File ending table ---")
     print(file_ending_table)
 
-    print("\n--- Common file paths table ---")
-    print(common_file_paths_table_coloured)
+    if file_paths:
+        print("\n--- Common file paths table ---")
+        print(common_file_paths_table_coloured)
 
     # Print summary information for the user
     all_bytes = sum([f.bytes for f in file_bytes])
@@ -535,6 +539,12 @@ def main():
         type=str,
         help="The ordering to give the results, you can order in desc or asc. The default is the order of the files as they're found. You can order by 'path', 'tokens', 'author', 'modified', the default is ascending. If you want descending write the column name, separated by a colon and then the ordering: 'path:desc'",
     )
+    byte_parser.add_argument(
+        "-fp",
+        "--file-paths",
+        action="store_true",
+        help="Calculate common file paths and include them in the output.",
+    )
 
     args = parser.parse_args()
 
@@ -555,6 +565,7 @@ def main():
             output=args.output,
             to_clipboard=args.clipboard,
             order=args.order,
+            file_paths=args.file_paths,
         )
 
 
