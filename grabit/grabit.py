@@ -167,6 +167,7 @@ def prepare_scan(
     to_clipboard: bool = False,
     order: str = None,
     git: bool = True,
+    max_tokens: int = None,
 ):
     """Prepares a context string for AI to read, optionally saves or copies it."""
     ignore_patterns, custom_message, options = read_dot_grabit(path)
@@ -198,7 +199,16 @@ def prepare_scan(
     for file in files:
         print(file.path)
         unix_style_path = file.path.replace("\\", "/")
-        context += f"## `{unix_style_path}`:\n### Git History:\n{file.git_history}\n### Contents:\n```\n{file.contents}\n```\n\n"
+
+        file_contents = file.contents
+        removal_message = "\n...\n<All further Tokens removed for brevity>"
+        max_size = len(removal_message) + max_tokens
+
+        # Deal with large files
+        if max_tokens is not None and len(file_contents) > max_size:
+            file_contents = file_contents[:max_tokens] + removal_message
+
+        context += f"## `{unix_style_path}`:\n### Git History:\n{file.git_history}\n### Contents:\n```\n{file_contents}\n```\n\n"
 
     if output:
         with open(output, "w", encoding="utf-8") as f:
@@ -474,6 +484,12 @@ def main():
         action="store_false",
         help="Sets flag to *NOT* include the git log history of the searched files. This reduces token count and can speed up the scan process. Git history is collected by default.",
     )
+    scan_parser.add_argument(
+        "-mt",
+        "--max-tokens",
+        type=int,
+        help="The maximum number of tokens to allow to be shown per file. Any file over this amount will have further output cut off. This helps get large projects into a small enough context to be useable.",
+    )
 
     # Parser for getting file bytes
     byte_parser = subparser.add_parser(
@@ -509,6 +525,7 @@ def main():
             to_clipboard=args.clipboard,
             order=args.order,
             git=args.no_git,
+            max_tokens=args.max_tokens,
         )
     elif args.command == "bytes":
         prepare_byte_scan(
