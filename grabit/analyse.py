@@ -40,6 +40,7 @@ def group_bytes_by_file_endings(
 
 def group_bytes_by_file_paths(
     files: List[FileSize],
+    file_sort: str = None,
 ) -> List[Dict[str, str | int]]:
     """
     Groups files by their file path and sums the bytes and orders on size,
@@ -86,8 +87,14 @@ def group_bytes_by_file_paths(
                     "depth": i + 1,
                 }
 
-    # Sort alphabetically
     path_list = [{"path": k} | v for k, v in all_paths.items()]
-    path_list.sort(key=lambda x: x["path"])
+
+    # Sort alphabetically by default
+    # **THIS IS REACHABLE**
+    if file_sort is None:
+        print("hi")
+        path_list.sort(key=lambda x: x["path"])
+    else:
+        path_list.sort(key=lambda x: x[file_sort])
 
     return path_list

@@ -337,7 +337,7 @@ def prepare_byte_scan(
     output: str = None,
     to_clipboard: bool = False,
     order: str = None,
-    file_paths: bool = False,
+    file_path_sort: str = None,
 ):
     """Prepares a context string for AI to read, and outputs a table of file sizes."""
     ignore_patterns, _, _ = read_dot_grabit(path)
@@ -378,7 +378,7 @@ def prepare_byte_scan(
     file_ending_table = generate_file_ending_table(grouped_bytes)
 
     # Group common file paths by size
-    common_file_paths = group_bytes_by_file_paths(file_bytes)
+    common_file_paths = group_bytes_by_file_paths(file_bytes, file_path_sort)
     common_file_paths_table_coloured = generate_common_file_paths_table(
         common_file_paths, colour=True
     )
@@ -393,7 +393,7 @@ def prepare_byte_scan(
     context += "\n\n## Below is a table of the files grouped by ending\n\n"
     context += file_ending_table
 
-    if file_paths:
+    if file_path_sort is not None:
         context += "\n\n## Below is a table of the files grouped by path\n\n"
         context += common_file_paths_table
 
@@ -412,7 +412,7 @@ def prepare_byte_scan(
     print("\n--- File ending table ---")
     print(file_ending_table)
 
-    if file_paths:
+    if file_path_sort is not None:
         print("\n--- Common file paths table ---")
         print(common_file_paths_table_coloured)
 
@@ -542,8 +542,9 @@ def main():
     byte_parser.add_argument(
         "-fp",
         "--file-paths",
-        action="store_true",
-        help="Calculate common file paths and include them in the output.",
+        nargs="?",
+        type=str,
+        help="If present the file paths will be grouped and the bytes for each calculated and included in the output. Use `bytes`, `depth`, or `seen` after -fp to order by bytes, depth, or seen respectively, by default they will order by path.",
     )
 
     args = parser.parse_args()
@@ -565,7 +566,7 @@ def main():
             output=args.output,
             to_clipboard=args.clipboard,
             order=args.order,
-            file_paths=args.file_paths,
+            file_path_sort=args.file_paths,
         )
 
 
