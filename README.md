@@ -211,7 +211,8 @@ Major.Minor.Patch
 - [x] ~~improve the option for fast search to include colour coding and ordering by column.~~
 - [ ] update the `bytes` command so that the file endings also have their total bytes colour coded.
 - [ ] use the `curses` built in python package to make a terminal app for automated actions: https://docs.python.org/3/howto/curses.html
-- [ ] Add a different kind of file type than `.grabit` or extend the `.grabit` file type to allow formatted messages. i.e. you should be able to write prompts that rely on `grabit` commands. So in the `.grabit` file you would set up several different configs, then in the prompt creation file you would use `<!grabit config some-config?>` or something along these lines. This would make it possible to build prompts quickly and only build them once, in such a way that you can set up repeat questions very effectively, or re-use prompt structure easily. It would also allow for `grabit` to ship with some basic configs already set up.
+- [ ] add a different kind of file type than `.grabit` or extend the `.grabit` file type to allow formatted messages. i.e. you should be able to write prompts that rely on `grabit` commands. So in the `.grabit` file you would set up several different configs, then in the prompt creation file you would use `<!grabit config some-config?>` or something along these lines. This would make it possible to build prompts quickly and only build them once, in such a way that you can set up repeat questions very effectively, or re-use prompt structure easily. It would also allow for `grabit` to ship with some basic configs already set up.
+- [ ] add a global set of include and exclude under a header like `# global` or something, this would apply everywhere across all configs.
 
 ## License
 
