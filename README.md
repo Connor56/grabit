@@ -150,6 +150,32 @@ Is the same as the above. If you want to see all possible options use:
 grabit scan --help
 ```
 
+### Print a directory tree
+
+#### Print to terminal
+
+```sh
+grabit tree /path/to/directory
+```
+
+#### Print to clipboard
+
+```sh
+grabit tree /path/to/directory -c
+```
+
+#### Set the maximum depth
+
+```sh
+grabit tree /path/to/directory --depth 2
+```
+
+or
+
+```sh
+grabit tree /path/to/directory -d 2
+```
+
 ## Ignore Files
 
 Please do `grabit init` and read the commentary in the file to see how these work. They are currently (2025-03-04) in a state of constant change. Once they're more stable I will add a full tutorial.
@@ -175,8 +201,8 @@ print("Hello, World!")
 Major.Minor.Patch
 
 - Major: Breaking changes.
-- Minor: New feature has been added, but backwards compatible.
-- Patch: Backwards compatible bug fixes.
+- Minor: New feature has been added, but it is backwards compatible.
+- Patch: Backwards compatible bug fixes or small doc changes.
 
 ## Future Features
 
