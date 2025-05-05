@@ -19,8 +19,6 @@ def print_tree(
     # Read the .grabit file and get the ignore patterns only
     ignore_patterns, _, _ = read_dot_grabit(start_path)
 
-    print(max_depth)
-
     output = ""
 
     for root, dirs, files in os.walk(start_path):
