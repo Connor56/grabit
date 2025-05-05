@@ -15,7 +15,7 @@ def copy_to_clipboard(text: str):
     system = platform.system()
     if system == "Windows":
         process = subprocess.Popen(["clip"], stdin=subprocess.PIPE)
-        process.communicate(input=text.encode("utf-8"))
+        process.communicate(input=text.encode("utf-16le"))
     elif system == "Darwin":  # macOS
         process = subprocess.Popen(["pbcopy"], stdin=subprocess.PIPE)
         process.communicate(input=text.encode("utf-8"))
