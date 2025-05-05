@@ -478,6 +478,27 @@ def main():
         help="If present the file paths will be grouped and the bytes for each calculated and included in the output. Use `bytes`, `depth`, or `seen` after -fp to order by bytes, depth, or seen respectively, by default they will order by path.",
     )
 
+    # Parser for getting the tree
+    tree_parser = subparser.add_parser(
+        "tree",
+        help="Get a tree of the files in a directory, showing the directory structure.",
+    )
+    tree_parser.add_argument(
+        "directory", type=str, help="The directory to scan for file sizes."
+    )
+    tree_parser.add_argument(
+        "-d",
+        "--depth",
+        type=int,
+        help="The depth of the tree to print, by default it will print the entire tree.",
+    )
+    tree_parser.add_argument(
+        "-c",
+        "--clipboard",
+        action="store_true",
+        help="Copy output to clipboard",
+    )
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -499,6 +520,9 @@ def main():
             order=args.order,
             file_path_sort=args.file_paths,
         )
+    elif args.command == "tree":
+        # If depth is not provided, set it to -1 to print the entire tree
+        print_tree(args.directory, args.depth or -1, args.clipboard)
 
 
 if __name__ == "__main__":
